@@ -1,0 +1,91 @@
+
+%%% Question 5 - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+\question This question is about monads.
+\begin{parts} 
+\part[4] Consider the following expression language:
+\begin{verbatim}
+data Expr a = Var a | App (Expr a) (Expr a)
+\end{verbatim}
+This type is a monad. Define a suitable instance of the \texttt{Monad} type class for the \texttt{Expr} type. \droppoints 
+\begin{solution} \emph{Application.}
+\begin{verbatim}
+instance Monad Expr where 
+    return = Var
+    
+    Var x >>= f = f x
+    (App l r) >>= f = App (l >>= f) (r >>= f)
+\end{verbatim}
+\end{solution}
+\part[2] With the help of a suitable example, explain the effect of the \texttt{Expr} monad. \droppoints 
+\begin{solution}
+\emph{Comprehension. 1 mark for describing the effect and 1 mark for an illustrative example.} The effect is substitution. For example, \texttt{App (Var "f") (Var "x") >>= \textbackslash x -> Var ("n"++x)} evaluates to \texttt{App (Var "nf") (Var "nx")}.
+\end{solution}
+\part[10] Prove that your instance of the \texttt{Monad} type class for the \texttt{Expr} type obeys the monad laws. \droppoints
+\begin{solution}
+	\emph{Application.} We can prove left identity through simple equational reasoning to rewrite one side of the equation to the other:
+	\begin{verbatim}
+	return x >>= f 
+	= { Definition of return }
+	Var x >>= f 
+	= { Definition of bind }
+	f x
+	\end{verbatim}
+	The proof for right identity is by induction on $m$. In the base case we have that $m = \mathit{Var~a}$ for all $a$:
+	\begin{verbatim}
+	Var a >>= return 
+	= { applying bind }
+	return a
+	= { applying return }
+	Var a
+	\end{verbatim}
+	In the recursive case, $m = \mathit{App}~l~r$ for all $l$ and all $r$:
+	\begin{verbatim}
+	App l r >>= return 
+	= { applying bind }
+	App (l >>= return) (r >>= return)
+	= { induction hypotheses }
+	App l r
+	\end{verbatim}
+	The proof for associativity is also by induction on $m$. In the base case we again have that $m = \mathit{Var~a}$ for all $a$:
+	\begin{verbatim}
+	(Var a >>= f) >>= g
+	= { applying bind }
+	(f a) >>= g 
+	= { eta expansion }
+	(\x -> f x >>= g) a
+	= { unapplying bind }
+	Var a >>= (\x -> f x >>= g)
+	\end{verbatim}
+	In the recursive case, $m = \mathit{App}~l~r$ for all $l$ and all $r$: \allowdisplaybreaks
+	\begin{verbatim}
+	(App l r >>= f) >>= g 
+	= { applying bind }
+	App (l >>= f) (r >>= f) >>= g
+	= { applying bind }
+	App ((l >>= f) >>= g) ((r >>= f) >>= g)
+	= { induction hypotheses }
+	App (l >>= (\x -> f x >>= g)) (r >>= (\x -> f x >>= g))
+	= { unapplying bind }
+	App l r >>= (\x -> f x >>= g)
+	\end{verbatim}
+\end{solution}
+\part[9] Monad transformers are monads which are defined in terms of other, arbitrary monads. A suitable type for a state monad transformer is:
+\begin{verbatim}
+data StateT s m a = StT (s -> m (a,s))
+\end{verbatim}
+This type is a monad. Complete the definition of the \texttt{Monad} instance by implementing \texttt{return} and \texttt{>{}>=}: 
+\begin{verbatim}
+instance Monad m => Monad (StateT s m) where 
+  ???
+\end{verbatim}
+\emph{Hint}: make use of the fact that \texttt{m} is required to be an instance of \texttt{Monad}. \droppoints 
+\begin{solution}
+\emph{Application. 3 marks for \texttt{return} and 6 marks for \texttt{>{}>=}.}
+\begin{verbatim}
+return x = StT (\s -> return (x,s))
+
+(StT m) >>= f = StT (\s -> m s >>= \(x,s') -> 
+                     let (StT m') = f x in m' s')
+\end{verbatim}
+\end{solution}
+\end{parts}

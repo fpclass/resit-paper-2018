@@ -1,0 +1,157 @@
+\allowdisplaybreaks
+%%% Question 4 - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+\question This question is about equational reasoning.
+
+A compiler is said to be correct if the result of interpreting a program according to its semantics is the same as compiling the program and then running it. Consider the following data type to represent a small expression language:
+\begin{verbatim}
+data Expr = Val Int | Add Expr Expr
+\end{verbatim}
+\begin{parts}
+\part[2] Define a function
+\begin{center}
+	\texttt{eval~::~Expr -> Int}
+\end{center}
+which interprets expressions. For example, \texttt{eval (Add (Val 4) (Add (Val 8) (Val 23)))} should evaluate to \texttt{35}. \droppoints
+\begin{solution}
+\emph{Application.} 
+\begin{verbatim}
+eval (Val n)   = n
+eval (Add l r) = eval l + eval r
+\end{verbatim}
+\end{solution}
+\part[4] To compile this expression language, we will use a simple, stack-based machine whose instruction set is represented by the following data type:
+\begin{verbatim}
+data Instr = PUSH Int | ADD
+\end{verbatim}
+A program is then a list of values of type \texttt{Instr} and the machine's stack is just a list of values of type \texttt{Int}:
+\begin{verbatim}
+type Program = [Instr]
+type Stack   = [Int]
+\end{verbatim}
+Define a function
+\begin{center}
+	\texttt{exec~::~Program -> Stack -> Stack}
+\end{center}
+which executes a program. For example, \texttt{exec [PUSH 4, PUSH 8, PUSH 32, ADD, ADD] []} should evaluate to \texttt{[35]}. \droppoints 
+\begin{solution}
+\emph{Application.} 
+\begin{verbatim}
+exec [] s              = s 
+exec (PUSH n : p) s    = exec p (n:s)
+exec (ADD : p) (x:y:s) = exec p (x+y:s)
+\end{verbatim}
+\end{solution}
+\part[4] Finally, we can write a compiler from expressions of type \texttt{Expr} to programs of type \texttt{Program}:
+\begin{center}
+	\texttt{comp~::~Expr -> Program}
+\end{center}
+Define this function so that, for example, \texttt{comp (Add (Val 4) (Add (Val 8) (Val 23)))} evaluates to \texttt{[PUSH 4, PUSH 8, PUSH 32, ADD, ADD]}. \droppoints 
+\begin{solution}
+\emph{Application.}
+\begin{verbatim}
+comp (Var n)   = [PUSH n]
+comp (Add l r) = comp r ++ comp l ++ [ADD]
+\end{verbatim}
+\end{solution}
+\part The following property states that executing a program \texttt{xs} followed by a program \texttt{ys} with an initial stack \texttt{s} yields the same result as executing \texttt{xs} with an initial stack \texttt{s} and then executing \texttt{ys} with the resulting stack:
+\begin{displaymath}
+\mathit{exec}~(xs \append ys)~s = \mathit{exec}~ys~(\mathit{exec}~xs~s)
+\end{displaymath}
+This proof will be by induction on \texttt{xs}. 
+\begin{subparts}
+\subpart[1] Prove the base case for \texttt{[]}. \droppoints 
+\begin{solution}
+\emph{Application.}
+\begin{verbatim}
+	Base case of exec ([] ++ ys) s = exec ys (exec [] s)
+	
+	exec ys (exec [] s)
+	= {applying exec}
+	exec ys s 
+	= {unapplying ++}
+	exec ([] ++ ys) s
+\end{verbatim}
+\end{solution}
+\subpart[3] Prove the inductive case for \texttt{x:xs} and \texttt{x=PUSH n} for all \texttt{n}. \droppoints
+\begin{solution}
+\emph{Application.}
+\begin{verbatim}
+Assume exec (xs ++ ys) s = exec ys (exec xs s).
+Inductive case of exec ((x:xs) ++ ys) s = exec ys (exec (x:xs) s)
+
+Case analysis on x.
+Case PUSH n:
+
+exec ys (exec (PUSH n:xs) s)
+= {applying exec}
+exec ys (exec xs (n:s))
+= {induction hypothesis}
+exec (xs ++ ys) (n:s)
+= {unapplying exec}
+exec (PUSH n : (xs ++ ys))
+= {unapplying ++}
+exec ((PUSH n:xs) ++ ys) s
+\end{verbatim}
+\end{solution}
+\subpart[3] Prove the inductive case for \texttt{x:xs} and \texttt{x=ADD}. You may also assume that the stack contains at least two values \texttt{s=x:y:zs}. \droppoints
+\begin{solution}
+	\emph{Application.}
+	\begin{verbatim}
+	Assume exec (xs ++ ys) s = exec ys (exec xs s).
+	Inductive case of exec ((x:xs) ++ ys) s = exec ys (exec (x:xs) s)
+	
+	Case analysis on x.	
+	Case ADD:
+	
+	exec ys (exec (ADD:xs) (x:y:zs))
+	= {applying exec}
+	exec ys (exec xs (x+y:zs))
+	= {induction hypothesis}
+	exec (xs ++ ys) (x+y:zs)
+	= {unapplying exec}
+	exec (ADD : (xs ++ ys)) (x+y:zs)
+	= {unapplying ++}
+	exec ((ADD : xs) ++ ys) (x+y:zs)
+	\end{verbatim}
+\end{solution}
+\end{subparts}
+\part[8] Prove the following compiler correctness theorem: 
+	\begin{displaymath}
+	\mathit{eval}~e : s = \mathit{exec}~(\mathit{comp}~e)~s
+	\end{displaymath} \droppoints
+\begin{solution}
+\emph{Application.}
+\begin{verbatim}
+Proof is by induction on e.
+
+Base case of eval (Var n) : s = exec (comp (Var n)) s
+
+exec (comp (Var n)) s
+= {applying comp}
+exec [PUSH n] s 
+= {applying exec}
+n:s
+= {unapplying eval}
+eval (Var n) : s
+
+Assume (1) eval l : s = exec (comp l) s 
+       (2) eval r : s = exec (comp r) s
+       
+exec (comp (Add l r)) s 
+= {applying comp}
+exec (comp r ++ comp l ++ [ADD]) s
+= {lemma}
+exec [ADD] (exec (comp l) (exec (comp r) s))
+= {induction hypothesis}
+exec [ADD] (exec (comp l) (eval r : s))
+= {induction hypothesis}
+exec [ADD] (eval l : (eval r : s))
+= {applying exec}
+exec [] (eval l + eval r : s)
+= {applying exec}
+eval l + eval r : s
+= {unapplying eval }
+eval (Add l r) : s
+\end{verbatim}
+\end{solution}
+\end{parts}

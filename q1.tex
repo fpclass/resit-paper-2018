@@ -1,0 +1,143 @@
+%%% Question 1 - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+\question This question is about functional programming as a programming paradigm.
+\begin{parts}
+\part For each of the following Haskell expressions, reduce it to its normal form.
+\begin{subparts}
+\subpart[1] \texttt{filter (>='e') "abcwdcbiabctdcbtabcer"} \droppoints 
+\begin{solution}
+\emph{Comprehension.} \texttt{"witter"}
+\end{solution}
+\subpart[1] \texttt{[1,2,3] >{}>= replicate 2} \droppoints
+\begin{solution}
+\emph{Comprehension.} \texttt{[1,1,2,2,3,3]}
+\end{solution}
+\subpart[1] \texttt{foldr (\textbackslash x r -> map (x:)~r ++ r) [[]] "abc"}  \droppoints
+\begin{solution}
+\emph{Comprehension.} \texttt{["abc","ab","ac","a","bc","b","c",""]}
+\end{solution}
+\subpart[1] \texttt{foldl (\textbackslash r x -> map (x:)~r ++ r) [[]] "abc"} \droppoints
+\begin{solution}
+\emph{Comprehension.} \texttt{["cba","cb","ca","c","ba","b","a",""]}
+\end{solution}
+\subpart[1] \texttt{fmap (fmap  (>{}>= (Just~.~reverse))) [[Nothing, Just "16"]]} \droppoints
+\begin{solution}
+\emph{Comprehension.}\\ \texttt{[[Nothing, Just "61"]]}
+\end{solution}
+\end{subparts}
+\ifprintanswers \pagebreak \else \fi
+\part For each of the following expressions, choose permissible types from the options that are listed. There is \emph{at least} one correct option for each expression.
+\begin{subparts}
+    \subpart[1] \texttt{23 + 42} \droppoints
+    \begin{enumerate}
+    	\item \texttt{Int}
+    	\item \texttt{Integer}
+    	\item \texttt{a}
+    	\item \texttt{Num a}
+    	\item \texttt{Num a => a}
+    \end{enumerate}
+	\begin{solution}
+		\emph{Comprehension.} 1,2,4
+	\end{solution}
+    \subpart[1] \texttt{["Chicken", ['D','u','c', 'k']]} \droppoints
+    \begin{enumerate}
+    	\item \texttt{[String, [Char]]}
+    	\item \texttt{[String]}
+    	\item \texttt{[(String, [Char])]}
+    	\item \texttt{([String], [Char])}
+    	\item \texttt{[[Char]]}
+    \end{enumerate}
+    \begin{solution}
+   		\emph{Comprehension.} 2,5
+    \end{solution}
+    \ifprintanswers \else \pagebreak \fi
+    \subpart[1] \texttt{\textbackslash f -> \textbackslash g -> \textbackslash x -> g (f x)} \droppoints
+    \begin{enumerate}
+    	\item \texttt{a -> b -> c -> d}
+    	\item \texttt{(a -> b) -> ((b -> c) -> (a -> c))}
+    	\item \texttt{(b -> c) -> ((a -> b) -> (a -> c))}
+    	\item \texttt{(b -> c) -> (a -> b) -> a -> c}
+    	\item \texttt{(a -> b) -> (b -> c) -> a -> c}
+    \end{enumerate}
+    \begin{solution}
+    	\emph{Comprehension.} 3,4
+    \end{solution}
+	\subpart[1] \texttt{\textbackslash f -> foldl f ([],[]) [(+),(-)]} \droppoints
+	\begin{enumerate}
+		\item \texttt{((Int -> Int -> Int) -> ([b], [c]) -> ([b], [c]))\\-> ([b], [c])}
+		\item \texttt{Num a =>\\
+			((a -> a -> a) -> ([b], [c]) -> (a -> a -> a))\\-> (a -> a -> a)}
+		\item \texttt{Num a =>\\
+			((a -> a -> a) -> ([b], [c]) -> ([b], [c]))\\-> ([b], [c])}
+		\item \texttt{Num a =>\\
+			(([b], [c]) -> (a -> a -> a) -> ([b], [c]))\\-> ([b], [c])}
+		\item \texttt{Num a =>\\
+			(([b], [c]) -> (a -> a -> a) -> (a -> a -> a))\\-> (a -> a -> a)}
+	\end{enumerate}
+	\begin{solution}
+		\emph{Comprehension.} 4
+	\end{solution}
+    \subpart[1] \texttt{\textbackslash f -> [] >{}>= (f >{}>= return)} \droppoints
+    \begin{enumerate}
+    	\item \texttt{(a -> [b]) -> [b]}
+    	\item \texttt{Monad m => (a -> m b) -> [b]}
+    	\item \texttt{Monad m => (a -> m b) -> m b}
+    	\item \texttt{([a] -> [b]) -> [b]}
+    	\item \texttt{Monad m => (m a -> [b]) -> m b}
+    \end{enumerate}
+    \begin{solution}
+    	\emph{Comprehension.} 1
+    \end{solution}
+\end{subparts}
+\part[3] Consider the following definition:
+\begin{verbatim}
+map :: (a -> b) -> [a] -> [b]
+map f []     = []
+map f (x:xs) = f x : map f xs
+\end{verbatim}
+Define a function \texttt{map'} which is equivalent to \texttt{map}, but is defined using \texttt{foldl} instead of explicit recursion. \droppoints 
+\begin{solution}
+\emph{Application.} One possible answer is:
+\begin{verbatim}
+map' f = foldl (\r x -> r ++ [f x]) []
+\end{verbatim}
+\end{solution}
+\part  \label{part:sum}
+\begin{subparts}
+\subpart[4] \label{part:strict} Trace how \texttt{map' (+1) [4,8,15]} would be evaluated in a language with \emph{call-by-value} semantics. \droppoints
+\begin{solution}
+\emph{Comprehension.}
+\begin{verbatim}
+   map' (+1) [4,8,15]
+=> foldl (\r x -> r ++ [(+1) x]) [] [4,8,15]
+=> foldl (\r x -> r ++ [(+1) x]) ([] ++ [(+1) 4]) [8,15]
+=> foldl (\r x -> r ++ [(+1) x]) ([] ++ [5]) [8,15]
+=> foldl (\r x -> r ++ [(+1) x]) [5] [8,15]
+=> foldl (\r x -> r ++ [(+1) x]) ([5] ++ [(+1) 8]) [15]
+=> foldl (\r x -> r ++ [(+1) x]) ([5] ++ [9]) [15]
+=> foldl (\r x -> r ++ [(+1) x]) [5,9] [15]
+=> foldl (\r x -> r ++ [(+1) x]) ([5,9] ++ [(+1) 15]) []
+=> foldl (\r x -> r ++ [(+1) x]) ([5,9] ++ [16]) []
+=> foldl (\r x -> r ++ [(+1) x]) [5,9,16] []
+=> [5,9,16]
+\end{verbatim}
+\end{solution}
+\subpart[4] \label{part:lazy} Trace how \texttt{map' (+1) [4,8,15]} would be evaluated in a language with \emph{call-by-name} semantics. You should assume that the value of \texttt{map' (+1) [4,8,15]} is required by some other part of the program. \droppoints
+\begin{solution} \emph{Comprehension.}
+\begin{verbatim}
+   map' (+1) [4,8,15]
+=> foldl (\r x -> r ++ [(+1) x]) [] [4,8,15]
+=> foldl (\r x -> r ++ [(+1) x]) ([] ++ [(+1) 4]) [8,15]
+=> foldl (\r x -> r ++ [(+1) x]) (([] ++ [(+1) 4]) ++ [(+1) 8]) [15]
+=> foldl (\r x -> r ++ [(+1) x]) ((([] ++ [(+1) 4]) ++ [(+1) 8]) ++ [(+1) 15]) []
+=> (([] ++ [(+1) 4]) ++ [(+1) 8]) ++ [(+1) 15]
+=> ([(+1) 4] ++ [(+1) 8]) ++ [(+1) 15]
+=> [(+1) 4, (+1) 8] ++ [(+1) 15]
+=> [(+1) 4, (+1) 8, (+1) 15]
+=> [5,9,16]
+\end{verbatim}
+\end{solution}
+\end{subparts}
+\part[4] Briefly explain what is meant by \emph{type erasure} and what implications this has on type-level programming. \droppoints 
+\begin{solution} \emph{Bookwork. 1 mark for explaining type erasure. 3 marks for explaining the implications on type-level programming.}
+\end{solution}
+\end{parts}

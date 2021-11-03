@@ -1,0 +1,110 @@
+
+%%% Question 3 - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+\question This question is about user-defined types and type classes.
+\begin{parts}
+\part A binary tree is a tree data structure where every node has at most two children. In Haskell, we could represent binary trees using the following data type where elements are stored in nodes:
+\begin{verbatim}
+data BinTree a = Leaf | Node (BinTree a) a (BinTree a)
+\end{verbatim} 
+As an example of a value of this type, consider the following definition for a binary tree containing the numbers 1, 2, and 3 as elements from left to right:
+\begin{verbatim}
+tree :: BinTree Int 
+tree = Node (Node Leaf 1 Leaf) 2 (Node Leaf 3 Leaf)
+\end{verbatim}
+\begin{subparts}
+\subpart[2] What is the type of the \texttt{Node} constructor? \droppoints 
+\begin{solution} \emph{Comprehension.}
+\begin{verbatim}
+Node :: BinTree a -> a -> BinTree a -> BinTree a
+\end{verbatim}
+\end{solution}
+\subpart[6] Define a function
+\begin{center}
+	\texttt{inorder~::~BinTree a -> [a]}
+\end{center}
+which performs an inorder traversal of the binary tree. For example, \texttt{inorder tree} should evaluate to \texttt{[1,2,3]}. Additionally, your function should run in linear time with respect to the size of the input. You should not assume that the compiler will perform any optimisations for you. \droppoints
+\begin{solution}
+\begin{verbatim}
+inorder :: BinTree a -> [a]
+inorder t = go t []
+  where 
+    go Leaf xs         = xs 
+    go (Node l x r) xs = go l (x : go r xs)
+\end{verbatim}
+\end{solution}
+\subpart[4] Define a function 
+\begin{center}
+	\texttt{traversePO~::~Monad m => (a -> m b) -> BinTree a -> m [b]}
+\end{center}
+which performs a postorder traversal of the binary tree and applies a function of type \texttt{a -> m b} to every element. For example, \texttt{traversePO  print tree} would evaluate to \texttt{[(), (), ()]} and write the following three lines to the standard output:
+
+\texttt{1}\\
+\texttt{3}\\
+\texttt{2}  \droppoints 
+\begin{solution}
+\emph{Application.}
+\begin{verbatim}
+traversePO :: Monad m => (a -> m b) -> BinTree a -> m [b]
+traversePO _ Leaf         = return []
+traversePO f (Node l x r) = do 
+  ls <- traversePO f l 
+  rs <- traversePO f r
+  y  <- f x
+  return (ls ++ rs ++ [y])
+\end{verbatim}
+\end{solution}
+\subpart[4] A binary tree containing pairs of keys and values can be used to represent a key-value store. Define a function 
+\begin{center}
+	\texttt{insert :: Ord k => k -> v -> BinTree (k,v) -> BinTree (k,v)}
+\end{center}
+which inserts a value of type \texttt{v} with a key of type \texttt{k} into a key-value store that is represented by values of type \texttt{BinTree (k,v)}. The function should behave as follows: if no element with the specified key exists, it should be added in the correct place. For example, suppose we have an existing key-value store:
+\begin{verbatim}
+store :: BinTree (Int, String)
+store = Node (Node Leaf (118, "Java") Leaf) 
+             (256, "FP" ) 
+             (Node Leaf (263, "Cyber Security") Leaf)
+\end{verbatim}
+Then \texttt{insert 255 "AI" store} should evaluate to:
+\begin{verbatim}
+Node (Node Leaf (118, "Java") (Node Leaf (255, "AI") Leaf )) 
+     (256, "FP") 
+     (Node Leaf (263, "Cyber Security") Leaf)
+\end{verbatim}
+If a key already exists in the key-value store, then its value should be overwritten with the specified one. \droppoints 
+\begin{solution}
+\emph{Application.}
+\begin{verbatim}
+insert k v Leaf = Node Leaf (k,v) Leaf 
+insert k v (Node l (k',x) r)
+  | k == k' = Node l (k,v) r
+  | k <  k' = Node (insert k v l) (k',x) r
+  | otherwise = Node l (k',x) (insert k v r)
+\end{verbatim}
+\end{solution}
+\pagebreak
+\subpart[4] Define a function 
+\begin{center}
+	\texttt{lookup :: Ord k => k -> BinTree (k,v) -> Maybe v}
+\end{center}
+which tries to look up the value corresponding to some key of type \texttt{k} in a key-value store. If the key exists, its value should be returned wrapped in \texttt{Just}. Otherwise, the function should return \texttt{Nothing}. \droppoints 
+\begin{solution}
+\emph{Application.}
+\begin{verbatim}
+lookup k Leaf = Nothing 
+lookup k (Node l (k',v) r)
+  | k == k' = Just v 
+  | k <  k' = lookup k l 
+  | otherwise = lookup k r
+\end{verbatim}
+\end{solution}
+\end{subparts}
+\part[5] The \texttt{BinTree} type is a foldable data structure. Define a suitable instance of \texttt{Foldable} for this type by implementing \texttt{foldr}. \droppoints 
+\begin{solution}
+\emph{Application.}
+\begin{verbatim}
+instance Foldable BinTree where 
+    foldr f v Leaf         = v 
+    foldr f v (Node l x r) = f x (foldr f (foldr f z r) l)
+\end{verbatim}
+\end{solution}
+\end{parts}
